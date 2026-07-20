@@ -1,40 +1,55 @@
-module tt_um_example (
-    input  wire [7:0] ui_in,
-    output wire [7:0] uo_out,
+/*
+ * Copyright (c) 2026 nguyenvandongsn97-sys
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-    input  wire [7:0] uio_in,
-    output wire [7:0] uio_out,
-    output wire [7:0] uio_oe,
+`default_nettype none
 
-    input wire ena,
-    input wire clk,
-    input wire rst_n
+module tt_um_nguyenvandongsn97_sys_full_adder (
+    input  wire [7:0] ui_in,    // Dedicated inputs
+    output wire [7:0] uo_out,   // Dedicated outputs
+
+    input  wire [7:0] uio_in,   // Bidirectional input path
+    output wire [7:0] uio_out,  // Bidirectional output path
+    output wire [7:0] uio_oe,   // Bidirectional output enable
+
+    input  wire ena,            // Enabled when the project is selected
+    input  wire clk,            // Unused: combinational design
+    input  wire rst_n           // Unused: combinational design
 );
 
-wire A;
-wire B;
-wire Cin;
+    wire a;
+    wire b;
+    wire cin;
+    wire sum_bit;
+    wire cout_bit;
 
-wire Sum;
-wire Cout;
+    assign a   = ui_in[0];
+    assign b   = ui_in[1];
+    assign cin = ui_in[2];
 
-assign A   = ui_in[0];
-assign B   = ui_in[1];
-assign Cin = ui_in[2];
+    // One-bit full-adder equations
+    assign sum_bit  = a ^ b ^ cin;
+    assign cout_bit = (a & b) | (a & cin) | (b & cin);
 
-assign Sum  = A ^ B ^ Cin;
+    // uo_out[0] = Sum
+    // uo_out[1] = Cout
+    assign uo_out = {6'b000000, cout_bit, sum_bit};
 
-assign Cout =
-       (A & B)
-     | (A & Cin)
-     | (B & Cin);
+    // Bidirectional pins are not used
+    assign uio_out = 8'b00000000;
+    assign uio_oe  = 8'b00000000;
 
-assign uo_out[0] = Sum;
-assign uo_out[1] = Cout;
-
-assign uo_out[7:2] = 6'b000000;
-
-assign uio_out = 8'b00000000;
-assign uio_oe  = 8'b00000000;
+    // Reference all unused inputs to avoid lint warnings
+    wire _unused = &{
+        ena,
+        clk,
+        rst_n,
+        ui_in[7:3],
+        uio_in,
+        1'b0
+    };
 
 endmodule
+
+`default_nettype wire
